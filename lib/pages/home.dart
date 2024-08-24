@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
+import 'package:manga_logger/barcode/controller.dart';
 import 'dart:convert';
 import 'package:manga_logger/models/manga_model.dart';
 import 'package:manga_logger/pages/manga_details_page.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -19,6 +21,8 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = false;
   late PaginationLinks paginationLinks;
   String pageTitle = "Trending Manga";
+  final MobileScannerController mobileScannerController =
+      MobileScannerController();
 
   @override
   void initState() {
@@ -191,8 +195,18 @@ class _HomePageState extends State<HomePage> {
                   endIndent: 10,
                 ),
                 IconButton(
-                  onPressed: () {
-                    print("Barcode scanner pressed");
+                  onPressed: () async {
+                    // Open the barcode scanner when the icon is pressed
+                    final scannedBarcode = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const BarcodeScannerWithController()),
+                    );
+
+                    if (scannedBarcode != null) {
+                      print("Barcode: $scannedBarcode");
+                    }
                   },
                   icon: SvgPicture.asset(
                     "assets/icons/barcode-scan.svg",
@@ -214,6 +228,9 @@ class _HomePageState extends State<HomePage> {
         ),
         onSubmitted: (value) {
           String newUrl = "https://kitsu.io/api/edge/";
+          String pageTitle;
+          bool trending;
+
           if (value.trim() == "") {
             newUrl += "trending/manga";
             pageTitle = "Trending Manga";
@@ -237,9 +254,9 @@ class _HomePageState extends State<HomePage> {
   void newMangaState(String newUrl, String pageTitle, bool trending) {
     return setState(() {
       mangaList.clear();
-      trending;
+      this.trending;
+      this.pageTitle;
       loadMangaData(newUrl);
-      pageTitle;
     });
   }
 
