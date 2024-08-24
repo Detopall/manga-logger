@@ -15,15 +15,14 @@ For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
 
-## Todos
+## Todo
 
-- menu to open/close and make the following pages
- -> home page
- -> login/out
- -> profile
- -> add book (using barcode scanner)
- -> statistics
+- statistics (in profile page)
+  - amount of manga
+  - genre ratio
+  - ...
 
-- barcode scanner option to look for a book/add it
-- user to press the title to go to the home page
-- user to press the settings icon to go to the settings
+- user functionality
+  - login/logout
+  - keep local storage (per account) of favorite manga
+  - able to add/remove favorite manga

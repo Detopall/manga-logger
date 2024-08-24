@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
-import 'package:manga_logger/barcode/controller.dart';
 import 'dart:convert';
 import 'package:manga_logger/models/manga_model.dart';
 import 'package:manga_logger/pages/manga_details_page.dart';
-import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
+import 'package:manga_logger/pages/profile.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,8 +21,7 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = false;
   late PaginationLinks paginationLinks;
   String pageTitle = "Trending Manga";
-  final MobileScannerController mobileScannerController =
-      MobileScannerController();
+  bool isDarkMode = true;
 
   @override
   void initState() {
@@ -81,50 +80,61 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: appBar(),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _searchField(),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.only(left: 30),
-            child: Text(
-              pageTitle,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        theme: isDarkMode ? ThemeData.dark() : ThemeData.light(),
+        home: Scaffold(
+          appBar: appBar(),
+          body: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _searchField(),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.only(left: 30),
+                child: Text(
+                  pageTitle,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: mangaList.isNotEmpty
+                    ? _mangaGrid(mangaList)
+                    : Center(
+                        child: isLoading
+                            ? const CircularProgressIndicator()
+                            : const Text("No data available")),
+              ),
+              _paginationButtons(trending, paginationLinks),
+              const SizedBox(height: 20),
+            ],
           ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: mangaList.isNotEmpty
-                ? _mangaGrid(mangaList)
-                : Center(
-                    child: isLoading
-                        ? const CircularProgressIndicator()
-                        : const Text("No data available")),
-          ),
-          _paginationButtons(trending, paginationLinks),
-          const SizedBox(height: 20),
-        ],
-      ),
-    );
+        ));
   }
 
   AppBar appBar() {
     return AppBar(
-      title: const Text(
-        'Manga Logger',
-        style: TextStyle(
-          color: Colors.black,
-          fontFamily: 'PermanentMarker',
-          fontSize: 30,
-          fontWeight: FontWeight.bold,
+      title: GestureDetector(
+        child: Text(
+          'Manga Logger',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontFamily: 'PermanentMarker',
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        onTap: () {
+          setState(() {
+            mangaList.clear();
+          });
+          loadMangaData(url);
+        },
       ),
       backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
       centerTitle: true,
@@ -135,12 +145,13 @@ class _HomePageState extends State<HomePage> {
           width: 35,
           margin: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Colors.white,
             borderRadius: BorderRadius.circular(10.0),
           ),
           alignment: Alignment.center,
           child: SvgPicture.asset(
-            "assets/icons/menu.svg",
+            isDarkMode
+                ? "assets/icons/menu-light.svg"
+                : "assets/icons/menu-dark.svg",
             height: 30,
             width: 30,
           ),
@@ -150,19 +161,29 @@ class _HomePageState extends State<HomePage> {
         GestureDetector(
           onTap: () {},
           child: Container(
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            width: 37,
-            alignment: Alignment.center,
-            child: SvgPicture.asset(
-              "assets/icons/settings.svg",
-              height: 30,
-              width: 30,
-            ),
-          ),
+              margin: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10.0),
+              ),
+              width: 37,
+              alignment: Alignment.center,
+              child: GestureDetector(
+                child: SvgPicture.asset(
+                  isDarkMode
+                      ? "assets/icons/profile-light.svg"
+                      : "assets/icons/profile-dark.svg",
+                  height: 30,
+                  width: 30,
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProfilePage(isDarkMode: isDarkMode),
+                    ),
+                  );
+                },
+              )),
         ),
       ],
     );
@@ -195,19 +216,7 @@ class _HomePageState extends State<HomePage> {
                   endIndent: 10,
                 ),
                 IconButton(
-                  onPressed: () async {
-                    // Open the barcode scanner when the icon is pressed
-                    final scannedBarcode = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              const BarcodeScannerWithController()),
-                    );
-
-                    if (scannedBarcode != null) {
-                      print("Barcode: $scannedBarcode");
-                    }
-                  },
+                  onPressed: barcodeSearch,
                   icon: SvgPicture.asset(
                     "assets/icons/barcode-scan.svg",
                     width: 24,
@@ -251,11 +260,69 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void barcodeSearch() async {
+    setState(() {
+      isLoading = false;
+    });
+
+    String barcode = await FlutterBarcodeScanner.scanBarcode(
+      "#ff66ff",
+      "Cancel",
+      true,
+      ScanMode.BARCODE,
+    );
+    if (barcode != "-1") {
+      final response = await http.get(Uri.parse(
+          'https://openlibrary.org/api/volumes/brief/isbn/$barcode.json'));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        String title = _extractTitleFromJsonData(jsonData);
+
+        // Get the title of the book and search for it
+        String newUrl = "https://kitsu.io/api/edge/";
+        String pageTitle = "Search Results";
+        newUrl += "manga?filter[text]=$title";
+        bool trending = false;
+        newMangaState(newUrl, pageTitle, trending);
+        setState(() {
+          isLoading = false;
+        });
+      }
+    }
+  }
+
+  String _extractTitleFromJsonData(Map<String, dynamic> jsonData) {
+    String title = '';
+
+    if (jsonData.containsKey('records')) {
+      Map<String, dynamic> records = jsonData['records'];
+
+      if (records.isNotEmpty) {
+        String randomKey = records.keys.first; // Get first (random) key
+        if (records[randomKey] is Map<String, dynamic>) {
+          Map<String, dynamic> data = records[randomKey];
+
+          if (data.containsKey('data') &&
+              data['data'] is Map<String, dynamic>) {
+            Map<String, dynamic> dataContent = data['data'];
+
+            if (dataContent.containsKey('title')) {
+              title = dataContent['title'];
+            }
+          }
+        }
+      }
+    }
+
+    return title;
+  }
+
   void newMangaState(String newUrl, String pageTitle, bool trending) {
     return setState(() {
       mangaList.clear();
-      this.trending;
-      this.pageTitle;
+      trending;
+      pageTitle;
       loadMangaData(newUrl);
     });
   }
@@ -294,10 +361,10 @@ class _HomePageState extends State<HomePage> {
               const SizedBox(height: 5),
               Text(
                 utf8.decode(manga.titleEn.codeUnits),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black,
+                  color: isDarkMode ? Colors.white : Colors.black,
                 ),
                 textAlign: TextAlign.center,
               ),

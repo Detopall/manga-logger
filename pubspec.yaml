@@ -12,8 +12,8 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.8
   http: ^1.2.2
-  mobile_scanner: ^5.2.1
   image_picker: ^1.1.2
+  flutter_barcode_scanner: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -30,9 +30,12 @@ flutter_launcher_icons:
 flutter:
   uses-material-design: true
   assets:
-    - assets/icons/menu.svg
-    - assets/icons/settings.svg
+    - assets/icons/menu-light.svg
+    - assets/icons/menu-dark.svg
+    - assets/icons/profile-light.svg
+    - assets/icons/profile-dark.svg
     - assets/icons/barcode-scan.svg
+
   fonts:
     - family: Poppins
       fonts:
