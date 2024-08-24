@@ -171,18 +171,42 @@ class _HomePageState extends State<HomePage> {
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.5),
-          )
+          ),
         ],
         color: Colors.white,
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: TextField(
-        decoration: const InputDecoration(
-          prefixIcon: Icon(Icons.search),
+        decoration: InputDecoration(
+          prefixIcon: const Icon(Icons.search),
+          suffixIcon: IntrinsicHeight(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const VerticalDivider(
+                  color: Colors.black,
+                  thickness: 0.1,
+                  width: 20,
+                  indent: 10,
+                  endIndent: 10,
+                ),
+                IconButton(
+                  onPressed: () {
+                    print("Barcode scanner pressed");
+                  },
+                  icon: SvgPicture.asset(
+                    "assets/icons/barcode-scan.svg",
+                    width: 24,
+                    height: 24,
+                  ),
+                ),
+              ],
+            ),
+          ),
           hintText: 'Search Manga',
-          hintStyle: TextStyle(color: Colors.black),
+          hintStyle: const TextStyle(color: Colors.black),
           alignLabelWithHint: true,
-          border: OutlineInputBorder(
+          border: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10.0)),
             borderSide: BorderSide.none,
           ),

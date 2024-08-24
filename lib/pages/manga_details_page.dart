@@ -18,6 +18,8 @@ class MangaDetailsPage extends StatelessWidget {
       'Popularity Rank: ${manga.popularityRank}',
     ];
 
+    print(manga.volumeCounter);
+
     // Generate a list of clickable buttons representing manga volumes
     final List<int> volumes =
         List.generate(manga.volumeCounter, (index) => index + 1);

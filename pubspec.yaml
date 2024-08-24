@@ -64,8 +64,7 @@ flutter:
   assets:
     - assets/icons/menu.svg
     - assets/icons/settings.svg
-    - assets/manga_data.json
-    - assets/trending_manga_data.json
+    - assets/icons/barcode-scan.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

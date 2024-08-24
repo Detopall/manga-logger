@@ -14,3 +14,16 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Todos
+
+- menu to open/close and make the following pages
+ -> home page
+ -> login/out
+ -> profile
+ -> add book (using barcode scanner)
+ -> statistics
+
+- barcode scanner option to look for a book/add it
+- user to press the title to go to the home page
+- user to press the settings icon to go to the settings
