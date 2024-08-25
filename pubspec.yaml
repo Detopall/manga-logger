@@ -15,6 +15,9 @@ dependencies:
   image_picker: ^1.1.2
   flutter_barcode_scanner: ^2.0.0
   flutter_markdown: ^0.7.3+1
+  sqflite: ^2.3.3+1
+  path: ^1.9.0
+  sqflite_common_ffi: ^2.3.3
 
 dev_dependencies:
   flutter_test:

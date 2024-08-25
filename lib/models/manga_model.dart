@@ -50,6 +50,23 @@ class MangaModel {
     }
     return "";
   }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'description': description,
+      'titleEn': titleEn,
+      'averageRating': averageRating,
+      'startDate': startDate,
+      'endDate': endDate,
+      'popularityRank': popularityRank,
+      'status': status,
+      'posterImageOriginal': posterImageOriginal,
+      'volumeCounter': volumeCounter,
+      'categoriesLinksRelated': categoriesLinksRelated,
+      'genresLinksRelated': genresLinksRelated
+    };
+  }
 }
 
 class PaginationLinks {
