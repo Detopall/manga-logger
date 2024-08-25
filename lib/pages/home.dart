@@ -3,6 +3,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:manga_logger/models/manga_model.dart';
+import 'package:manga_logger/pages/about.dart';
 import 'package:manga_logger/pages/manga_details_page.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:manga_logger/pages/profile.dart';
@@ -133,57 +134,58 @@ class _HomePageState extends State<HomePage> {
           setState(() {
             mangaList.clear();
           });
-          loadMangaData(url);
+          loadMangaData(url); // Assuming this is a defined method
         },
       ),
       backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
       centerTitle: true,
       elevation: 0.0,
-      leading: GestureDetector(
-        onTap: () {},
-        child: Container(
-          width: 35,
-          margin: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          alignment: Alignment.center,
-          child: SvgPicture.asset(
-            isDarkMode
-                ? "assets/icons/menu-light.svg"
-                : "assets/icons/menu-dark.svg",
-            height: 30,
-            width: 30,
-          ),
-        ),
-      ),
+      actionsIconTheme: const IconThemeData(color: Colors.white),
+      iconTheme: const IconThemeData(color: Colors.white),
       actions: [
+        IconButton(
+          onPressed: () {
+            setState(() {
+              isDarkMode = !isDarkMode;
+            });
+          },
+          icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+        ),
+        IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const AboutPage()),
+            );
+          },
+          icon: const Icon(Icons.info),
+        ),
         GestureDetector(
-          onTap: () {},
           child: Container(
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10.0),
+            margin: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10.0),
+            ),
+            width: 37,
+            alignment: Alignment.center,
+            child: GestureDetector(
+              child: SvgPicture.asset(
+                isDarkMode
+                    ? "assets/icons/profile-light.svg"
+                    : "assets/icons/profile-dark.svg",
+                height: 30,
+                width: 30,
               ),
-              width: 37,
-              alignment: Alignment.center,
-              child: GestureDetector(
-                child: SvgPicture.asset(
-                  isDarkMode
-                      ? "assets/icons/profile-light.svg"
-                      : "assets/icons/profile-dark.svg",
-                  height: 30,
-                  width: 30,
-                ),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfilePage(isDarkMode: isDarkMode),
-                    ),
-                  );
-                },
-              )),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfilePage(isDarkMode: isDarkMode),
+                  ),
+                );
+              },
+            ),
+          ),
         ),
       ],
     );

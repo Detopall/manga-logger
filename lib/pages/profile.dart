@@ -64,44 +64,40 @@ class _ProfilePageState extends State<ProfilePage> {
 
   AppBar _appBar() {
     return AppBar(
-      title: Text(
-        'Profile',
-        style: TextStyle(
-          color: isDarkMode ? Colors.white : Colors.black,
-          fontFamily: 'PermanentMarker',
-          fontSize: 30,
-          fontWeight: FontWeight.bold,
+        title: Text(
+          'Profile',
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black,
+            fontFamily: 'PermanentMarker',
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
-      centerTitle: true,
-      elevation: 0.0,
-      leading: GestureDetector(
-        onTap: () {
-          Navigator.pop(context, isDarkMode);
-        },
-        child: Container(
-            width: 35,
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10.0),
-            ),
-            alignment: Alignment.center,
-            child: GestureDetector(
-                onTap: () {
-                  Navigator.pop(context, isDarkMode);
-                },
-                child: Icon(Icons.arrow_back,
-                    color: isDarkMode ? Colors.white : Colors.black,
-                    size: 30))),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-          onPressed: _toggleTheme,
-        ),
-      ],
-    );
+        backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
+        centerTitle: true,
+        elevation: 0.0,
+        leading: GestureDetector(
+            onTap: () {
+              Navigator.pop(context, isDarkMode);
+            },
+            child: Container(
+                width: 35,
+                margin: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+                alignment: Alignment.center,
+                child: GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context, isDarkMode);
+                  },
+                  child: IconButton(
+                    onPressed: () {
+                      Navigator.pop(context, isDarkMode);
+                    },
+                    icon: const Icon(Icons.arrow_back),
+                  ),
+                ))));
   }
 
   Widget _favoritedMangaList() {
