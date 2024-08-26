@@ -147,7 +147,7 @@ class DatabaseHelper {
 
   Future<void> insertManga(int userId, MangaModel manga) async {
     final db = await getDatabase(path: _dbPath);
-    String mangaJson = jsonEncode(manga.toMap());
+    String mangaJson = jsonEncode(manga.toJson());
     await db.insert(
       'favorite_manga',
       {

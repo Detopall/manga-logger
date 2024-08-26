@@ -29,7 +29,7 @@ class User {
     return {
       'userId': userId,
       'username': username,
-      'favoriteManga': favoriteManga.map((manga) => manga.toMap()).toList(),
+      'favoriteManga': favoriteManga.map((manga) => manga.toJson()).toList(),
     };
   }
 }

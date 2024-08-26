@@ -20,7 +20,7 @@ class _MangaDetailsPageState extends State<MangaDetailsPage> {
   @override
   void initState() {
     super.initState();
-    _checkIfFavorite(); // Check favorite status when initializing
+    _checkIfFavorite();
   }
 
   @override
@@ -34,6 +34,12 @@ class _MangaDetailsPageState extends State<MangaDetailsPage> {
       'Popularity Rank: ${widget.manga.popularityRank}',
       'Volumes: ${widget.manga.volumeCounter}',
     ];
+
+    print(widget.manga.categoriesLinksRelated);
+
+    widget.manga.categoriesLinksRelated.forEach((category) {
+      details.add(category);
+    });
 
     String mangaTitle = utf8.decode(widget.manga.titleEn.codeUnits);
 
@@ -136,16 +142,6 @@ class _MangaDetailsPageState extends State<MangaDetailsPage> {
                             .toList(),
                       ),
                       const SizedBox(height: 20),
-                      // Vertical list of clickable volume buttons
-                      const Text(
-                        "Volumes:",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors
-                              .white, // Set text color to white for contrast
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -227,7 +223,8 @@ class _MangaDetailsPageState extends State<MangaDetailsPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Removed from favorites'),
+          content: Text('Removed from favorites',
+              style: TextStyle(fontSize: 16, color: Colors.white)),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.all(10),
@@ -241,7 +238,8 @@ class _MangaDetailsPageState extends State<MangaDetailsPage> {
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Added to favorites'),
+          content: Text('Added to favorites',
+              style: TextStyle(fontSize: 16, color: Colors.white)),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
           margin: EdgeInsets.all(10),

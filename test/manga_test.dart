@@ -13,19 +13,17 @@ void main() {
 
   // make mock manga data
   Map<String, dynamic> mockMangaData = {
-    'id': "testId",
-    'description': "",
-    'title': "",
-    'titleEn': "",
-    'averageRating': "",
-    'startDate': "",
-    'endDate': "",
-    'popularityRank': "",
-    'status': "",
-    'posterImageOriginal': "",
-    'volumeCounter': 0,
-    'categoriesLinksRelated': "",
-    'genresLinksRelated': ""
+    "id": "60854",
+    "description": "A thrilling manga...",
+    "titleEn": "Test Manga Title",
+    "averageRating": "8.5",
+    "startDate": "2023-01-01",
+    "endDate": "2024-01-01",
+    "popularityRank": 10,
+    "status": "Completed",
+    "posterImage": "http://example.com/poster.jpg",
+    "volumeCount": 12,
+    "categoriesLinksRelated": ["school", "comedy", "sports"],
   };
 
   group('DatabaseHelper Manga Tests', () {
@@ -55,10 +53,11 @@ void main() {
       await databaseHelper.insertManga(userId, testManga);
 
       MangaModel manga =
-          await databaseHelper.getFavoriteManga(userId, "testId");
+          await databaseHelper.getFavoriteManga(userId, testManga.id);
 
       expect(manga, isNotNull);
       expect(manga.id, testManga.id);
+      expect(manga.titleEn, testManga.titleEn);
     });
 
     test('Get All Manga', () async {
@@ -72,7 +71,8 @@ void main() {
 
       await databaseHelper.insertManga(userId, testManga);
 
-      List<MangaModel> allManga = await databaseHelper.getAllFavoriteManga(userId);
+      List<MangaModel> allManga =
+          await databaseHelper.getAllFavoriteManga(userId);
 
       expect(allManga, isNotEmpty);
       expect(allManga.length, 1);
@@ -90,18 +90,18 @@ void main() {
 
       await databaseHelper.insertManga(userId, testManga);
 
-      List<MangaModel> allManga = await databaseHelper.getAllFavoriteManga(userId);
+      List<MangaModel> allManga =
+          await databaseHelper.getAllFavoriteManga(userId);
 
       expect(allManga, isNotEmpty);
       expect(allManga.length, 1);
       expect(allManga[0].id, testManga.id);
 
-      bool isFavorite = await databaseHelper.isFavoriteManga(userId, "testId");
+      bool isFavorite =
+          await databaseHelper.isFavoriteManga(userId, testManga.id);
 
       expect(isFavorite, true);
     });
-
-
 
     test('Delete One Manga', () async {
       await databaseHelper.insertUser("TestUser");
@@ -115,21 +115,21 @@ void main() {
       await databaseHelper.insertManga(userId, testManga);
 
       MangaModel manga =
-          await databaseHelper.getFavoriteManga(userId, "testId");
+          await databaseHelper.getFavoriteManga(userId, testManga.id);
 
       expect(manga, isNotNull);
       expect(manga.id, testManga.id);
 
-      await databaseHelper.deleteFavoriteManga(userId, "testId");
+      await databaseHelper.deleteFavoriteManga(userId, testManga.id);
 
-      expect(() => databaseHelper.getFavoriteManga(userId, "testId"),
+      expect(() => databaseHelper.getFavoriteManga(userId, testManga.id),
           throwsA(isA<Exception>()));
 
-      List<MangaModel> allManga = await databaseHelper.getAllFavoriteManga(userId);
+      List<MangaModel> allManga =
+          await databaseHelper.getAllFavoriteManga(userId);
 
       expect(allManga, isEmpty);
     });
-
 
     test('Delete All Manga', () async {
       await databaseHelper.insertUser("TestUser");
@@ -143,20 +143,20 @@ void main() {
       await databaseHelper.insertManga(userId, testManga);
 
       MangaModel manga =
-          await databaseHelper.getFavoriteManga(userId, "testId");
+          await databaseHelper.getFavoriteManga(userId, testManga.id);
 
       expect(manga, isNotNull);
       expect(manga.id, testManga.id);
 
       await databaseHelper.deleteAllFavoriteManga(userId);
 
-      expect(() => databaseHelper.getFavoriteManga(userId, "testId"),
+      expect(() => databaseHelper.getFavoriteManga(userId, testManga.id),
           throwsA(isA<Exception>()));
 
-      List<MangaModel> allManga = await databaseHelper.getAllFavoriteManga(userId);
+      List<MangaModel> allManga =
+          await databaseHelper.getAllFavoriteManga(userId);
 
       expect(allManga, isEmpty);
     });
-
   });
 }

@@ -26,6 +26,8 @@ class _HomePageState extends State<HomePage> {
   String pageTitle = "Trending Manga";
   bool isDarkMode = true;
 
+  final TextEditingController _searchController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +47,11 @@ class _HomePageState extends State<HomePage> {
     loadMangaData(url);
   }
 
-  Future<void> initializeUserState() async {}
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   Future<void> loadMangaData(String url) async {
     setState(() {
@@ -59,9 +65,10 @@ class _HomePageState extends State<HomePage> {
         final jsonData = json.decode(response.body);
 
         // Parse manga data
-        List<MangaModel> loadedManga = (jsonData['data'] as List)
-            .map((item) => MangaModel.fromJson(item))
-            .toList();
+        List<MangaModel> loadedManga = await Future.wait(
+            (jsonData['data'] as List)
+                .map((item) => MangaModel.fromJsonEndpoint(item))
+                .toList());
 
         // Parse pagination links
         PaginationLinks links = PaginationLinks.fromJson(jsonData);
@@ -136,9 +143,10 @@ class _HomePageState extends State<HomePage> {
         ),
         onTap: () {
           setState(() {
+            _searchController.clear();
             mangaList.clear();
           });
-          loadMangaData(url); // Assuming this is a defined method
+          loadMangaData(url);
         },
       ),
       backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
@@ -209,6 +217,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(10.0),
       ),
       child: TextField(
+        controller: _searchController,
         decoration: InputDecoration(
           prefixIcon: const Icon(Icons.search),
           suffixIcon: IntrinsicHeight(

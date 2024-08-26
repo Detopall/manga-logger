@@ -1,3 +1,6 @@
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 class MangaModel {
   String id = "";
   String description = "";
@@ -9,13 +12,20 @@ class MangaModel {
   String status = "";
   String posterImageOriginal = "";
   int volumeCounter = 0;
-  String categoriesLinksRelated = "";
-  String genresLinksRelated = "";
+  List<String> categoriesLinksRelated = [];
 
   MangaModel();
 
-  // Factory constructor to create a new instance from JSON
-  factory MangaModel.fromJson(Map<String, dynamic> jsonData) {
+  static Future<MangaModel> fromJsonEndpoint(
+      Map<String, dynamic> jsonData) async {
+    /*
+
+    This function is the creation of
+    the Manga Model from the endpoint to retrieve manga data
+
+    */
+    List<String> categoriesLinks = await getCategories(jsonData);
+
     return MangaModel()
       ..id = jsonData['id'] ?? ""
       ..description = jsonData['attributes']?['description'] ?? ""
@@ -29,10 +39,29 @@ class MangaModel {
       ..posterImageOriginal =
           jsonData['attributes']?['posterImage']?['original'] ?? ""
       ..volumeCounter = jsonData['attributes']?['volumeCount'] ?? 0
+      ..categoriesLinksRelated = categoriesLinks;
+  }
+
+  factory MangaModel.fromJson(Map<String, dynamic> jsonData) {
+    /*
+
+    This function is the creation of
+    the Manga Model using the stripped data from the endpoint
+
+    */
+    return MangaModel()
+      ..id = jsonData['id'] ?? ""
+      ..description = jsonData['description'] ?? ""
+      ..titleEn = jsonData['titleEn'] ?? ""
+      ..averageRating = jsonData['averageRating'] ?? ""
+      ..startDate = jsonData['startDate'] ?? ""
+      ..endDate = jsonData['endDate'] ?? ""
+      ..popularityRank = jsonData['popularityRank']?.toString() ?? ""
+      ..status = jsonData['status'] ?? ""
+      ..posterImageOriginal = jsonData['posterImageOriginal'] ?? ""
+      ..volumeCounter = jsonData['volumeCounter'] ?? 0
       ..categoriesLinksRelated =
-          jsonData['relationships']?['categories']?['links']?['related'] ?? ""
-      ..genresLinksRelated =
-          jsonData['relationships']?['genres']?['links']?['related'] ?? "";
+          List<String>.from(jsonData['categoriesLinksRelated'] ?? []);
   }
 
   static String findTitle(Map<String, dynamic> jsonData) {
@@ -51,7 +80,12 @@ class MangaModel {
     return "";
   }
 
-  Map<String, dynamic> toMap() {
+  @override
+  String toString() {
+    return toJson().toString();
+  }
+
+  Map<String, dynamic> toJson() {
     return {
       'id': id,
       'description': description,
@@ -63,9 +97,51 @@ class MangaModel {
       'status': status,
       'posterImageOriginal': posterImageOriginal,
       'volumeCounter': volumeCounter,
-      'categoriesLinksRelated': categoriesLinksRelated,
-      'genresLinksRelated': genresLinksRelated
+      'categoriesLinksRelated': categoriesLinksRelated
     };
+  }
+
+  static Future<List<String>> getCategories(
+      Map<String, dynamic> jsonData) async {
+    List<String> categories = [];
+
+    String uri =
+        jsonData['relationships']?['categories']?['links']?['related'] ?? "";
+
+    if (uri == "") {
+      return categories;
+    }
+
+    try {
+      Map<String, dynamic> response = await getCategoryRequest(uri);
+      List<dynamic> categoriesJson = response['data'];
+
+      for (var category in categoriesJson) {
+        String title = category['attributes']?['title'] ?? "";
+
+        if (title.isNotEmpty) {
+          categories.add(title);
+        }
+      }
+    } catch (e) {
+      return [];
+    }
+
+    return categories;
+  }
+
+  static Future<Map<String, dynamic>> getCategoryRequest(String uri) async {
+    try {
+      final response = await http.get(Uri.parse(uri));
+
+      if (response.statusCode == 200) {
+        return jsonDecode(response.body);
+      } else {
+        throw Exception('Failed to load category data');
+      }
+    } catch (e) {
+      throw Exception('Failed to load category data: $e');
+    }
   }
 }
 

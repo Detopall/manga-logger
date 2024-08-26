@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:manga_logger/models/database_helper.dart';
+import 'package:manga_logger/models/manga_model.dart';
 import 'package:manga_logger/models/user.dart';
 import 'package:manga_logger/pages/login.dart';
+import 'package:manga_logger/pages/manga_details_page.dart';
+import 'dart:convert';
 
 class ProfilePage extends StatefulWidget {
-  final bool isDarkMode; // Accept dark mode state
+  final bool isDarkMode;
   final User user;
 
   const ProfilePage({super.key, required this.isDarkMode, required this.user});
@@ -16,17 +19,37 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   late bool isDarkMode;
   final DatabaseHelper _dbHelper = DatabaseHelper();
+  List<MangaModel> _favoriteMangaList = [];
 
   @override
   void initState() {
     super.initState();
     isDarkMode = widget.isDarkMode;
+    _loadFavoriteManga();
+  }
+
+  Future<void> _loadFavoriteManga() async {
+    try {
+      int? userId = await _dbHelper.getLastLoggedInUser();
+      print(userId);
+      if (userId != null) {
+        List<MangaModel> favoriteManga =
+            await _dbHelper.getAllFavoriteManga(userId);
+
+        setState(() {
+          _favoriteMangaList = favoriteManga;
+        });
+      }
+    } catch (e) {
+      const SnackBar(
+        content: Text('Failed to load favorite manga. Please try again.'),
+      );
+    }
   }
 
   Future<void> _logout() async {
     try {
       await _dbHelper.logout();
-
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const LoginPage(),
@@ -84,28 +107,39 @@ class _ProfilePageState extends State<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Padding(
-                padding: EdgeInsets.only(left: 30),
+              Padding(
+                padding: const EdgeInsets.only(left: 30),
                 child: Text(
                   "Favorite Manga:",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'PermanentMarker',
-                    color: Colors.black,
+                    color: isDarkMode ? Colors.white : Colors.black,
                   ),
                 ),
               ),
               const SizedBox(height: 20),
               Expanded(
-                child: _favoriteMangaList(),
+                child: _favoriteMangaList.isNotEmpty
+                    ? _mangaGrid(_favoriteMangaList)
+                    : Center(
+                        child: Text(
+                          "No favorite manga available.",
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
               ),
               ElevatedButton(
-                  onPressed: _logout,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
-                  ),
-                  child: const Text('Logout')),
+                onPressed: _logout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromRGBO(124, 30, 232, 0.5),
+                ),
+                child: const Text('Logout'),
+              ),
             ],
           ),
         ),
@@ -113,21 +147,49 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _favoriteMangaList() {
-    return ListView.builder(
-      itemCount: 4,
+  Widget _mangaGrid(List<MangaModel> mangaList) {
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        childAspectRatio: 0.5,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 20,
+      ),
+      itemCount: mangaList.length,
       itemBuilder: (context, index) {
-        return Card(
-          color: isDarkMode ? Colors.grey[800] : Colors.white,
-          child: ListTile(
-            title: Text(
-              "Favorite Manga $index",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontFamily: 'PermanentMarker',
-                fontSize: 16,
+        final manga = mangaList[index];
+        return GestureDetector(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => MangaDetailsPage(manga: manga),
               ),
-            ),
+            );
+          },
+          child: Column(
+            children: [
+              Expanded(
+                child: Image.network(
+                  manga.posterImageOriginal,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.error),
+                ),
+              ),
+              const SizedBox(height: 5),
+              Text(
+                utf8.decode(manga.titleEn.codeUnits),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 10),
+            ],
           ),
         );
       },
