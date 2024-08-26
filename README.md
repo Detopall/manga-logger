@@ -36,3 +36,9 @@ cd manga_logger
 flutter pub get
 flutter run
 ```
+
+## Demo
+
+A demo video has been placed on YouTube. Click the image below to watch it.
+
+[![Manga Logger](./assets/manga_logger.png)](https://youtu.be/VRgmvnCCzbQ)
