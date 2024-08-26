@@ -31,7 +31,6 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _loadFavoriteManga() async {
     try {
       int? userId = await _dbHelper.getLastLoggedInUser();
-      print(userId);
       if (userId != null) {
         List<MangaModel> favoriteManga =
             await _dbHelper.getAllFavoriteManga(userId);
@@ -107,31 +106,50 @@ class _ProfilePageState extends State<ProfilePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(left: 30),
-                child: Text(
-                  "Favorite Manga:",
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'PermanentMarker',
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
+              // Use Expanded to make this section take available space
               Expanded(
-                child: _favoriteMangaList.isNotEmpty
-                    ? _mangaGrid(_favoriteMangaList)
-                    : Center(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.only(left: 30),
                         child: Text(
-                          "No favorite manga available.",
+                          "Favorite Manga:",
                           style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: 'PermanentMarker',
                             color: isDarkMode ? Colors.white : Colors.black,
-                            fontSize: 16,
                           ),
                         ),
                       ),
+                      const SizedBox(height: 20),
+                      // Use a fixed height for the manga grid section
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.5,
+                        child: _favoriteMangaList.isNotEmpty
+                            ? _mangaGrid(_favoriteMangaList)
+                            : Center(
+                                child: Text(
+                                  "No favorite manga available.",
+                                  style: TextStyle(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                      ),
+                      // Display Stats Section
+                      _favoriteMangaList.isNotEmpty
+                          ? _buildStatsSection()
+                          : Container(),
+                    ],
+                  ),
+                ),
               ),
               ElevatedButton(
                 onPressed: _logout,
@@ -145,6 +163,109 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
       ),
     );
+  }
+
+  Widget _buildStatsSection() {
+    // Calculate category counts from the favorite manga list
+    Map<String, int> categoryCounts =
+        _calculateCategoryCounts(_favoriteMangaList);
+
+    // Convert category counts to a list of widgets
+    List<Widget> categoryWidgets = categoryCounts.entries.map((entry) {
+      return Card(
+        elevation: 3,
+        color: isDarkMode ? Colors.grey[800] : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                entry.key,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                ),
+              ),
+              const SizedBox(height: 5),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${entry.value} titles',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  _buildProgressBar(entry.value,
+                      categoryCounts.values.reduce((a, b) => a + b)),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    }).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 30),
+          child: Text(
+            "Manga Stats:",
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'PermanentMarker',
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: categoryWidgets,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressBar(int count, int total) {
+    double progress = total == 0 ? 0 : count / total;
+    return SizedBox(
+      width: 100,
+      child: LinearProgressIndicator(
+        value: progress,
+        backgroundColor: isDarkMode ? Colors.grey : Colors.grey[300],
+        color: isDarkMode ? Colors.purpleAccent : Colors.purple,
+      ),
+    );
+  }
+
+  Map<String, int> _calculateCategoryCounts(
+      List<MangaModel> favoriteMangaList) {
+    Map<String, int> categoryCounts = {};
+
+    // Loop through the list of favorite manga
+    for (var manga in favoriteMangaList) {
+      // Assume each manga has a list of categories
+      for (var category in manga.categoriesLinksRelated) {
+        if (categoryCounts.containsKey(category)) {
+          categoryCounts[category] = categoryCounts[category]! + 1;
+        } else {
+          categoryCounts[category] = 1;
+        }
+      }
+    }
+
+    return categoryCounts;
   }
 
   Widget _mangaGrid(List<MangaModel> mangaList) {
