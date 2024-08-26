@@ -200,6 +200,28 @@ class DatabaseHelper {
     throw Exception('Manga not found');
   }
 
+  Future<bool> isFavoriteManga(int userId, String mangaId) async {
+    final db = await getDatabase(path: _dbPath);
+    final List<Map<String, dynamic>> maps = await db.query(
+      'favorite_manga',
+      where: 'userId = ?',
+      whereArgs: [userId],
+    );
+
+    if (maps.isNotEmpty) {
+      for (final map in maps) {
+        final mangaJson = map['favoriteManga'];
+        final mangaMap = jsonDecode(mangaJson);
+
+        if (mangaMap['id'] == mangaId) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
   Future<void> deleteFavoriteManga(int userId, String mangaId) async {
     final db = await getDatabase(path: _dbPath);
 

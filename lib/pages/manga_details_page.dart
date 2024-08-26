@@ -1,30 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:manga_logger/models/manga_model.dart';
+import 'package:manga_logger/models/database_helper.dart';
+import 'package:manga_logger/pages/login.dart';
 import 'dart:convert';
 
-class MangaDetailsPage extends StatelessWidget {
+class MangaDetailsPage extends StatefulWidget {
   final MangaModel manga;
 
   const MangaDetailsPage({super.key, required this.manga});
 
   @override
+  State<MangaDetailsPage> createState() => _MangaDetailsPageState();
+}
+
+class _MangaDetailsPageState extends State<MangaDetailsPage> {
+  final DatabaseHelper _dbHelper = DatabaseHelper();
+  bool _isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkIfFavorite(); // Check favorite status when initializing
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Extract information to avoid repetitive code
     final List<String> details = [
-      'Average Rating: ${manga.averageRating}',
-      'Start Date: ${manga.startDate}',
-      'End Date: ${manga.endDate}',
-      'Status: ${manga.status}',
-      'Popularity Rank: ${manga.popularityRank}',
+      'Average Rating: ${widget.manga.averageRating}',
+      'Start Date: ${widget.manga.startDate}',
+      'End Date: ${widget.manga.endDate}',
+      'Status: ${widget.manga.status}',
+      'Popularity Rank: ${widget.manga.popularityRank}',
+      'Volumes: ${widget.manga.volumeCounter}',
     ];
 
-    print(manga.volumeCounter);
-
-    // Generate a list of clickable buttons representing manga volumes
-    final List<int> volumes =
-        List.generate(manga.volumeCounter, (index) => index + 1);
-
-    String mangaTitle = utf8.decode(manga.titleEn.codeUnits);
+    String mangaTitle = utf8.decode(widget.manga.titleEn.codeUnits);
 
     return Scaffold(
       appBar: AppBar(
@@ -51,8 +62,11 @@ class MangaDetailsPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.favorite, color: Colors.white),
-            onPressed: () {},
+            icon: Icon(
+              _isFavorite ? Icons.favorite : Icons.favorite_border,
+              color: Colors.white,
+            ),
+            onPressed: _toggleFavorite,
           ),
         ],
       ),
@@ -61,7 +75,7 @@ class MangaDetailsPage extends StatelessWidget {
           // Background Image
           Positioned.fill(
             child: Image.network(
-              manga.posterImageOriginal,
+              widget.manga.posterImageOriginal,
               fit: BoxFit.cover,
               color: Colors.black.withOpacity(0.5),
               colorBlendMode: BlendMode.darken,
@@ -91,7 +105,7 @@ class MangaDetailsPage extends StatelessWidget {
                           Expanded(
                             flex: 1, // 1/3 of the row width
                             child: Image.network(
-                              manga.posterImageOriginal,
+                              widget.manga.posterImageOriginal,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   const Icon(Icons.error),
@@ -103,7 +117,7 @@ class MangaDetailsPage extends StatelessWidget {
                             flex: 2, // 2/3 of the row width
                             child: RichText(
                                 text: TextSpan(
-                              text: manga.description,
+                              text: widget.manga.description,
                               style: const TextStyle(
                                   fontSize: 16,
                                   color: Colors
@@ -132,21 +146,6 @@ class MangaDetailsPage extends StatelessWidget {
                               .white, // Set text color to white for contrast
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: volumes.map((volume) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
-                            child: ElevatedButton(
-                              onPressed: () {
-                                // Action to mark the volume as bought
-                                print('Volume $volume clicked!');
-                              },
-                              child: Text('Volume $volume'),
-                            ),
-                          );
-                        }).toList(),
-                      ),
                     ],
                   ),
                 ),
@@ -158,7 +157,6 @@ class MangaDetailsPage extends StatelessWidget {
     );
   }
 
-  // Method to create styled labels
   Widget _styledLabel(String text) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -176,5 +174,80 @@ class MangaDetailsPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<int?> _getLoggedInUserId() async {
+    int? userId = await _dbHelper.getLastLoggedInUser();
+    if (userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please login first'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+        ),
+      );
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+      );
+    }
+    return userId;
+  }
+
+  Future<void> _checkIfFavorite() async {
+    int? userId = await _getLoggedInUserId();
+    if (userId != null) {
+      bool isFavorite =
+          await _dbHelper.isFavoriteManga(userId, widget.manga.id);
+      setState(() {
+        _isFavorite = isFavorite;
+      });
+    }
+  }
+
+  Future<void> _toggleFavorite() async {
+    int? userId = await _getLoggedInUserId();
+    if (userId == null) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const LoginPage(),
+        ),
+      );
+      return;
+    }
+
+    if (_isFavorite) {
+      await _dbHelper.deleteFavoriteManga(userId, widget.manga.id);
+      setState(() {
+        _isFavorite = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Removed from favorites'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    } else {
+      await _dbHelper.insertManga(userId, widget.manga);
+      setState(() {
+        _isFavorite = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Added to favorites'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          margin: EdgeInsets.all(10),
+          duration: Duration(seconds: 1),
+        ),
+      );
+    }
   }
 }

@@ -79,6 +79,30 @@ void main() {
       expect(allManga[0].id, testManga.id);
     });
 
+    test('Is Favorite Manga', () async {
+      await databaseHelper.insertUser("TestUser");
+      final user = await databaseHelper.getUserByUsername("TestUser");
+      const userId = 1;
+
+      expect(user.userId, userId);
+
+      final testManga = MangaModel.fromJson(mockMangaData);
+
+      await databaseHelper.insertManga(userId, testManga);
+
+      List<MangaModel> allManga = await databaseHelper.getAllFavoriteManga(userId);
+
+      expect(allManga, isNotEmpty);
+      expect(allManga.length, 1);
+      expect(allManga[0].id, testManga.id);
+
+      bool isFavorite = await databaseHelper.isFavoriteManga(userId, "testId");
+
+      expect(isFavorite, true);
+    });
+
+
+
     test('Delete One Manga', () async {
       await databaseHelper.insertUser("TestUser");
       final user = await databaseHelper.getUserByUsername("TestUser");
