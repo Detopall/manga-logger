@@ -44,6 +44,15 @@ class DatabaseHelper {
           "CREATE TABLE favorite_manga(id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER, favoriteManga TEXT, "
           "FOREIGN KEY (userId) REFERENCES users(userId) ON DELETE CASCADE)",
         );
+
+        // Create app_metadata table to store the last logged in user
+        await db.execute(
+          "CREATE TABLE app_metadata(id INTEGER PRIMARY KEY, last_logged_in_user_id INTEGER)",
+        );
+
+        // Insert default metadata row (id should always be 1)
+        await db
+            .insert('app_metadata', {'id': 1, 'last_logged_in_user_id': null});
       },
       version: 1,
       onDowngrade: onDatabaseDowngradeDelete,
@@ -101,6 +110,38 @@ class DatabaseHelper {
       'users',
       where: 'userId = ?',
       whereArgs: [userId],
+    );
+  }
+
+  Future<void> setLastLoggedInUser(int userId) async {
+    final db = await getDatabase(path: _dbPath);
+    await db.update(
+      'app_metadata',
+      {'last_logged_in_user_id': userId},
+      where: 'id = ?',
+      whereArgs: [1],
+    );
+  }
+
+  Future<int?> getLastLoggedInUser() async {
+    final db = await getDatabase(path: _dbPath);
+
+    final List<Map<String, dynamic>> maps =
+        await db.query('app_metadata', where: 'id = ?', whereArgs: [1]);
+
+    if (maps.isNotEmpty && maps.first['last_logged_in_user_id'] != null) {
+      return maps.first['last_logged_in_user_id'] as int;
+    }
+    return null;
+  }
+
+  Future<void> logout() async {
+    final db = await getDatabase(path: _dbPath);
+    await db.update(
+      'app_metadata',
+      {'last_logged_in_user_id': null},
+      where: 'id = ?',
+      whereArgs: [1],
     );
   }
 

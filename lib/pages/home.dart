@@ -7,9 +7,11 @@ import 'package:manga_logger/pages/about.dart';
 import 'package:manga_logger/pages/manga_details_page.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:manga_logger/pages/profile.dart';
+import 'package:manga_logger/models/user.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final User user;
+  const HomePage({super.key, required this.user});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -42,6 +44,8 @@ class _HomePageState extends State<HomePage> {
 
     loadMangaData(url);
   }
+
+  Future<void> initializeUserState() async {}
 
   Future<void> loadMangaData(String url) async {
     setState(() {
@@ -180,7 +184,8 @@ class _HomePageState extends State<HomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProfilePage(isDarkMode: isDarkMode),
+                    builder: (context) =>
+                        ProfilePage(isDarkMode: isDarkMode, user: widget.user),
                   ),
                 );
               },

@@ -23,6 +23,5 @@ samples, guidance on mobile development, and a full API reference.
   - ...
 
 - user functionality
-  - login/logout
   - keep local storage (per account) of favorite manga
   - able to add/remove favorite manga
